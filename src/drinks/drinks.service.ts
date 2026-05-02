@@ -1,10 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateDrinkDto } from './dtos/createDrink.dto';
 import { DrinksInterface } from './interfaces/drinks.interface';
 import { UpdateDrinkDto } from './dtos/updateDrink.dto';
+import { DrinksEntity } from './entities/drinks.entities';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PaginationDto } from 'src/common/dtos/pagination.dtos';
 
 @Injectable()
 export class DrinksService {
+
+    constructor(
+        @InjectRepository(DrinksEntity)
+        private readonly drinksRepository: Repository<DrinksEntity>,
+    ) {}
 
     private drinks: DrinksInterface[] = [{
             name: "Capuccino",
@@ -32,12 +41,17 @@ export class DrinksService {
             aditions: ["Chantilly", "Chocolate syrup"],
         }]
     
-        getAllDrinks() {
-            return this.drinks
+        async getAllDrinks(paginationDto: PaginationDto) {
+            const { limit, offset } = paginationDto;
+            const drinks = await this.drinksRepository.find({
+                skip: offset,
+                take: limit
+            })
+            return drinks
         }
     
-        getDrinkByName(name: string) {
-            const find = this.drinks.find((drink) => {
+        async getDrinkByName(name: string) {
+            /*const find = this.drinks.find((drink) => {
                 if(drink.name === name) return drink
             })
     
@@ -45,19 +59,36 @@ export class DrinksService {
                 return null
             }
             
-            return find;
+            return find;*/
+            try{
+                const findDrink = await this.drinksRepository.findOneBy({
+                    name
+                })
+
+                if (!findDrink) {
+                    throw new NotFoundException(`The drink with name: ${name} was not found`)
+                }
+
+                return findDrink;
+                    
+            } catch (error) {
+                throw new Error(error)
+            }
         }
     
-        createDrink(drinkDto: CreateDrinkDto) {
-            this.drinks.push({
+        async createDrink(drinkDto: CreateDrinkDto) {
+            /*this.drinks.push({
                 name: drinkDto.name,
                 ounces: drinkDto.ounces,
                 aditions: drinkDto.aditions,
-            })
+            })*/
+           const newDrink = await this.drinksRepository.create({ ...drinkDto });
+           const newDrinkSaved = await this.drinksRepository.save(newDrink);
+           console.log(newDrinkSaved);
         }
     
-        updateDrink(name: string, updateDrinkDto: UpdateDrinkDto) {
-            let foundDrink: DrinksInterface | null = this.getDrinkByName(name);
+        async updateDrink(name: string, updateDrinkDto: UpdateDrinkDto) {
+            /*let foundDrink: DrinksInterface | null = this.getDrinkByName(name);
     
             if (!foundDrink) {
                 return { message: `La bebida con el nombre ${name} no fue encontrada`}
@@ -76,11 +107,27 @@ export class DrinksService {
             }
     
             return this.drinks[indexToChange];
-    
+            */
+           try {
+            const drinkUpdated = await this.drinksRepository.preload({
+                name,
+                ...updateDrinkDto
+            })
+
+            if (!drinkUpdated) {
+                throw new BadRequestException(`The drink with name: ${name} was not found`)
+            }
+
+            await this.drinksRepository.save(drinkUpdated)
+            return drinkUpdated;
+
+            } catch (error) {
+                throw new BadRequestException(`Error updating drink with name: ${name}`)
+            }
         }
     
-        deleteDrink(name: string) {
-            let foundDrink: DrinksInterface | null = this.getDrinkByName(name);
+        async deleteDrink(name: string) {
+            /*let foundDrink: DrinksInterface | null = this.getDrinkByName(name);
     
             if (!foundDrink) {
                 return { message: `La bebida con el nombre ${name} no fue encontrada`}
@@ -96,7 +143,10 @@ export class DrinksService {
             this.drinks.forEach((drink, index) => {
                 if (index > indexToDelete) this.drinks[index - 1] = drink
             })
-    
+            */
+           const drink = await this.getDrinkByName(name);
+           await this.drinksRepository.remove(drink);
+           return `Has been deleted the drink with name: ${name}`;
         }
 
 }

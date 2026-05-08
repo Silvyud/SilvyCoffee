@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
 import { DrinksModule } from './drinks/drinks.module';
-import { DrinksService } from './drinks/drinks.service';
-import { DrinksController } from './drinks/drinks.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { PurchasesModule } from './purchases/purchases.module';
-import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -25,7 +23,7 @@ import { UsersModule } from './users/users.module';
     
     PurchasesModule,
     
-    UsersModule],
+    AuthModule],
   controllers: [],
   providers: [],
 })

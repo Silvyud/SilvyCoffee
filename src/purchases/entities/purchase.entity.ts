@@ -1,5 +1,5 @@
 import { DrinksEntity } from "src/drinks/entities/drinks.entities";
-import { UserEntity } from "src/users/entities/user.entity";
+import { UserEntity } from "src/auth/entities/user.entity";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({name: 'purchases'})
@@ -21,15 +21,15 @@ export class PurchaseEntity {
             onDelete: 'CASCADE'
         }
     )
-    drink_fk: string
+    drink_fk: DrinksEntity
 
     @ManyToOne(
         () => UserEntity,
-        (user) => user.id,
+        (user) => user.user_id,
         {
-            onDelete: 'CASCADE'
+            onDelete: 'CASCADE',
         }
     )
-    user_fk: string
+    user_fk: UserEntity
 
 }

@@ -1,6 +1,6 @@
 import { DrinksEntity } from "src/drinks/entities/drinks.entities";
 import { UserEntity } from "src/auth/entities/user.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({name: 'purchases'})
 export class PurchaseEntity {
@@ -31,5 +31,10 @@ export class PurchaseEntity {
         }
     )
     user_fk: UserEntity
+
+    @BeforeInsert()
+    createDate() {
+        this.fecha_compra = new Date(Date.now())
+    }
 
 }

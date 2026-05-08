@@ -12,5 +12,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   ],
   controllers: [DrinksController],
   providers: [DrinksService],
+  exports: [DrinksService]
 })
 export class DrinksModule {}
